@@ -121,7 +121,9 @@ ARDUINO_CORE_PATH = $(ARDUINO_DIR)/hardware/cores/arduino
 endif
 
 # Everything gets built in here
+ifndef OBJDIR
 OBJDIR  	  = build-cli
+endif
 
 ########################################################################
 # Local sources
@@ -151,7 +153,7 @@ endif
 endif
 
 # all the objects!
-OBJS            = $(LOCAL_OBJS) $(CORE_OBJS)
+#OBJS            = $(LOCAL_OBJS) $(CORE_OBJS)
 
 ########################################################################
 # Rules for making stuff
@@ -181,7 +183,15 @@ ECHO    = echo
 # General arguments
 SYS_LIBS      = $(patsubst %,$(ARDUINO_LIB_PATH)/%,$(ARDUINO_LIBS))
 SYS_INCLUDES  = $(patsubst %,-I%,$(SYS_LIBS))
-SYS_OBJS      = $(wildcard $(patsubst %,%/*.o,$(SYS_LIBS)))
+SYS_C_SRCS    = $(foreach SYS_LIBS,$(SYS_LIBS),$(wildcard $(SYS_LIBS)/*.c))
+SYS_CPP_SRCS  = $(foreach SYS_LIBS,$(SYS_LIBS),$(wildcard $(SYS_LIBS)/*.cpp))
+SYS_OBJ_DIRS  = $(patsubst %,$(OBJDIR)/%,$(ARDUINO_LIBS))
+SYS_OBJ_FILES = $(SYS_C_SRCS:.c=.o) $(SYS_CPP_SRCS:.cpp=.o)
+SYS_OBJS      = $(foreach lib,$(ARDUINO_LIBS),$(OBJDIR)/$(lib).o)
+OBJS          = $(LOCAL_OBJS) $(CORE_OBJS) $(SYS_OBJ_FILES)
+
+#debug:
+#	$(ECHO) $(OBJS)
 
 CPPFLAGS      = -mmcu=$(MCU) -DF_CPU=$(F_CPU) \
 			-I. -I$(ARDUINO_CORE_PATH) \
@@ -203,6 +213,7 @@ PDEFOOTER_FILE = $(ARDUINO_CORE_PATH)/main.cxx
 # here for building e.g. a system C++ file and a local C++
 # file. Besides making things simpler now, this would also make it
 # easy to change the build options in future
+
 
 # normal local sources
 # .o rules are for objects, .d for dependency tracking
@@ -253,6 +264,9 @@ $(OBJDIR)/%.o: $(ARDUINO_CORE_PATH)/%.c
 	$(CC) -c $(CPPFLAGS) $(CFLAGS) $< -o $@
 
 $(OBJDIR)/%.o: $(ARDUINO_CORE_PATH)/%.cpp
+	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $< -o $@
+
+$(OBJDIR)/%.o: $(SYS_LIBS)/%.cpp
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $< -o $@
 
 # various object conversions
@@ -322,13 +336,17 @@ $(OBJDIR):
 		mkdir $(OBJDIR)
 
 $(TARGET_ELF): 	$(OBJS)
-		$(CC) $(LDFLAGS) -o $@ $(OBJS) $(SYS_OBJS)
+		$(CC) $(LDFLAGS) -o $@ $(OBJS)
 
 $(DEP_FILE):	$(OBJDIR) $(DEPS)
 		cat $(DEPS) > $(DEP_FILE)
 
 upload:		$(TARGET_HEX)
 		$(AVRDUDE) $(AVRDUDE_COM_OPTS) $(AVRDUDE_ARD_OPTS) \
+			-U flash:w:$(TARGET_HEX):i
+
+load:		$(TARGET_HEX)
+		$(AVRDUDE) $(AVRDUDE_COM_OPTS) $(ISP_PROG) \
 			-U flash:w:$(TARGET_HEX):i
 
 ispload:	$(TARGET_HEX)

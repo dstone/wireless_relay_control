@@ -128,6 +128,7 @@ endif
 ########################################################################
 # Local sources
 #
+LOCAL_INCLUDES  = $(patsubst %, -iquote %, $(LOCAL_LIBS))
 LOCAL_C_SRCS    = $(wildcard *.c)
 LOCAL_CPP_SRCS  = $(wildcard *.cpp)
 LOCAL_CC_SRCS   = $(wildcard *.cc)
@@ -188,14 +189,11 @@ SYS_CPP_SRCS  = $(foreach SYS_LIBS,$(SYS_LIBS),$(wildcard $(SYS_LIBS)/*.cpp))
 SYS_OBJ_DIRS  = $(patsubst %,$(OBJDIR)/%,$(ARDUINO_LIBS))
 SYS_OBJ_FILES = $(SYS_C_SRCS:.c=.o) $(SYS_CPP_SRCS:.cpp=.o)
 SYS_OBJS      = $(foreach lib,$(ARDUINO_LIBS),$(OBJDIR)/$(lib).o)
-OBJS          = $(LOCAL_OBJS) $(CORE_OBJS) $(SYS_OBJ_FILES)
-
-#debug:
-#	$(ECHO) $(OBJS)
+OBJS          = $(LOCAL_OBJS) $(CORE_OBJS) $(SYS_OBJS)
 
 CPPFLAGS      = -mmcu=$(MCU) -DF_CPU=$(F_CPU) \
 			-I. -I$(ARDUINO_CORE_PATH) \
-			$(SYS_INCLUDES) -g -Os -w -Wall \
+			$(SYS_INCLUDES) $(LOCAL_INCLUDES) -g -Os -w -Wall \
 			-ffunction-sections -fdata-sections
 CFLAGS        = -std=gnu99
 CXXFLAGS      = -fno-exceptions
@@ -266,8 +264,8 @@ $(OBJDIR)/%.o: $(ARDUINO_CORE_PATH)/%.c
 $(OBJDIR)/%.o: $(ARDUINO_CORE_PATH)/%.cpp
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $< -o $@
 
-$(OBJDIR)/%.o: $(SYS_LIBS)/%.cpp
-	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $< -o $@
+$(OBJDIR)/%.o: $(SYS_CPP_SRCS)
+	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $(filter %$*.cpp, $^) -o $@
 
 # various object conversions
 $(OBJDIR)/%.hex: $(OBJDIR)/%.elf

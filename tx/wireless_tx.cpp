@@ -54,13 +54,6 @@ void motionStart() {
         timeoutPending = 0;
         relayState = TURN_ON;
 
-        // clap on
-        for ( int i = 0; i < 2; i++ ) {
-            digitalWrite( ledPin, HIGH );
-            delay( 200 );
-            digitalWrite( ledPin, LOW );
-            delay( 100 );
-        }
     }
 }
 
@@ -69,13 +62,6 @@ void motionStop() {
     if ( relayState == TURN_ON ) {
         timeoutPending = 1;
         time = millis();
-        // clap off
-        for ( int i = 0; i < 3; i++ ) {
-            digitalWrite( ledPin, HIGH );
-            delay( 200 );
-            digitalWrite( ledPin, LOW );
-            delay( 100 );
-        }
     }
 }
 

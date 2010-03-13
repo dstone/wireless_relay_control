@@ -4,6 +4,8 @@ int relayPin = 2; // arduino pin wired to relay control
 int ledPin   = 9; // non-essential led
 int rxPin    = 8; // arduino pin wired to receiver data pin
 
+int state    = 0;
+
 void setup();
 void loop();
 
@@ -16,6 +18,10 @@ void setup() {
     // initialize relay and led pins
     pinMode( relayPin, OUTPUT );
     pinMode( ledPin, OUTPUT );
+
+    digitalWrite( ledPin, HIGH );
+    delay( 100 );
+    digitalWrite( ledPin, LOW );
 }
 
 void loop() {
@@ -27,18 +33,21 @@ void loop() {
             // than expected, we received either an incomplete message
             // or noise. make blinky error and ignore.
             digitalWrite( ledPin, HIGH );
-            delay(100);
+            delay( 100 );
             digitalWrite( ledPin, LOW );
             delay( 100 );
             digitalWrite( ledPin, HIGH );
             delay( 100 );
             digitalWrite( ledPin, LOW );
+            digitalWrite( ledPin, state );
             return;
         }
         // I went a little overboard in my message 'protocol'. don't
         // really need addr or message type, so ignore.
         uint8_t action = msg[ACTN_INDEX];
-        digitalWrite( relayPin, action == TURN_ON ? HIGH : LOW );
+        state = action == TURN_ON ? HIGH : LOW;
+        digitalWrite( relayPin, state );
+        digitalWrite( ledPin, state );
     }
 }
 

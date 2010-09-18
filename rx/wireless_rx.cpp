@@ -22,6 +22,10 @@ void setup() {
     digitalWrite( ledPin, HIGH );
     delay( 100 );
     digitalWrite( ledPin, LOW );
+    delay( 100 );
+    digitalWrite( ledPin, HIGH );
+    delay( 100 );
+    digitalWrite( ledPin, LOW );
 }
 
 void loop() {
@@ -45,7 +49,7 @@ void loop() {
         // I went a little overboard in my message 'protocol'. don't
         // really need addr or message type, so ignore.
         uint8_t action = msg[ACTN_INDEX];
-        state = action == TURN_ON ? HIGH : LOW;
+        state = ( action == TURN_ON ? HIGH : LOW );
         digitalWrite( relayPin, state );
         digitalWrite( ledPin, state );
     }

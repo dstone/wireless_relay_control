@@ -21,8 +21,8 @@ int relayState = TURN_OFF;  // signal to be sent to receiver
 int timeoutPending = 0;     
 unsigned long time;
 
-const unsigned long dur = 30 * 1000;    // 30 second duration
-int cdsThreshold = 10;                  // if cds reading is above this, don't 
+const unsigned long dur = 5000;
+int cdsThreshold = 100;                 // if cds reading is above this, don't 
                                         // send TURN_ON signal
 
 void setup() {

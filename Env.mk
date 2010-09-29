@@ -5,4 +5,4 @@ MCU = atmega168
 AVR_TOOLS_PATH = /usr/bin
 AVRDUDE_CONF = /etc/avrdude.conf
 ISP_PROG = -c usbtiny
-
+AVRDUDE_ARD_PROGRAMMER = usbtiny

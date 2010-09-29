@@ -5,10 +5,7 @@
 void setup();
 void loop();
 void updatePir();
-void motionStart();
-void motionStop();
 void sendState();
-void checkTimeout();
 int darkEnough();
 
 int txPin = 2;  // pin connected to data pin on transmitter
@@ -17,13 +14,9 @@ int cdsPin = 5; // pin connected to photosensor
 int ledPin = 9;
 
 int pirState = LOW;         // current state of PIR sensor
-int relayState = TURN_OFF;  // signal to be sent to receiver
-int timeoutPending = 0;     
-unsigned long time;
 
-const unsigned long dur = 5000;
-int cdsThreshold = 100;                 // if cds reading is above this, don't 
-                                        // send TURN_ON signal
+int cdsThreshold = 100;     // if cds reading is above this, don't 
+                            // send TURN_ON signal
 
 void setup() {
     vw_set_tx_pin( txPin );
@@ -38,12 +31,10 @@ void setup() {
 
 void loop() {
     // main loop:
-    // read PIR, check if timeout reached, transmit relay state, 
-    // all once per second
+    // read PIR, transmit PIR state
     updatePir();
-    checkTimeout();
     sendState();
-    delay( 1000 );
+    delay( 100 );
 }
 
 void updatePir() {
@@ -55,62 +46,29 @@ void updatePir() {
     }
 
     if ( pirReading > pirState ) {
-        motionStart();
+        if ( darkEnough() ) {
+            pirState = HIGH;
+        }
     } else {
-        motionStop();
-    }
-}
-
-void motionStart() {
-    pirState = HIGH;
-    if ( darkEnough() || relayState == TURN_ON ) {
-        timeoutPending = 0;
-        relayState = TURN_ON;
-    }
-
-}
-
-void motionStop() {
-    pirState = LOW;
-    if ( relayState == TURN_ON ) {
-        timeoutPending = 1;
-        time = millis();
-    }
-}
-
-void checkTimeout() {
-    if ( timeoutPending && ( millis() - time > dur ) ) {
-        relayState = TURN_OFF;
+        pirState = LOW;
     }
 }
 
 int darkEnough() {
-    return analogRead( cdsPin ) <= cdsThreshold;
+    //return analogRead( cdsPin ) <= cdsThreshold;
+    return 1;
 }
 
 void sendState() {
     uint8_t msg[MSG_LEN];
-    msg[ACTN_INDEX] = relayState;
+    msg[ACTN_INDEX] = pirState ? TURN_ON : TURN_OFF;
     vw_send( msg, MSG_LEN );
 
     // some debug: blink if sending TURN_ON
-    if ( relayState == TURN_ON ) {
+    if ( pirState ) {
         digitalWrite( ledPin, HIGH );
         delay( 10 );
         digitalWrite( ledPin, LOW );
-        delay( 100 );
     }
-}
-
-int main(void)
-{
-    init();
-
-    setup();
-    
-    for (;;)
-        loop();
-        
-    return 0;
 }
 

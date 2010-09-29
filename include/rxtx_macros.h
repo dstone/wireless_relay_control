@@ -17,6 +17,6 @@
 
 // Action to take
 #define TURN_ON 0xAA
-#define TURN_OFF 0xCC
+#define TURN_OFF 0xF0
 
 #endif

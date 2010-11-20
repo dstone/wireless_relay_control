@@ -9,11 +9,16 @@
 #define MSG_LEN 3
 #define ADDR_INDEX 0
 #define TYPE_INDEX 1
+#define CDS_STATE_INDEX 1
 #define ACTN_INDEX 2
 
 // Type of message
 #define STATE_CHANGE 0xAA
 #define PING 0x33
+
+// CDS state
+#define DARK 0xAA
+#define LIGHT 0x33
 
 // Action to take
 #define TURN_ON 0xAA

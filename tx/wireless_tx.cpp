@@ -46,21 +46,19 @@ void updatePir() {
     }
 
     if ( pirReading > pirState ) {
-        if ( darkEnough() ) {
-            pirState = HIGH;
-        }
+        pirState = HIGH;
     } else {
         pirState = LOW;
     }
 }
 
 int darkEnough() {
-    //return analogRead( cdsPin ) <= cdsThreshold;
-    return 1;
+    return analogRead( cdsPin ) <= cdsThreshold;
 }
 
 void sendState() {
     uint8_t msg[MSG_LEN];
+    msg[CDS_STATE_INDEX] = darkEnough() ? DARK : LIGHT;
     msg[ACTN_INDEX] = pirState ? TURN_ON : TURN_OFF;
     vw_send( msg, MSG_LEN );
 

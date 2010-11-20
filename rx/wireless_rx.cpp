@@ -7,7 +7,7 @@ int rxPin    = 8; // arduino pin wired to receiver data pin
 int state = HIGH;
 long time = 0;
 int timeoutPending = true;
-long duration = 5000; // timeout of 10 seconds
+long duration = 20000; // timeout in MS before relay is turned off
 double timeScale = 2.0 * 2.71828183;
 
 void setup();
@@ -31,7 +31,6 @@ void setup() {
     // initialize relay and led pins
     pinMode( relayPin, OUTPUT );
     pinMode( ledPin, OUTPUT );
-    blink(5);
 }
 
 void loop() {
@@ -60,18 +59,23 @@ void checkRX() {
             //blinkyError();
             return;
         }
-        // I went a little overboard in my message 'protocol'. don't
-        // really need addr or message type, so ignore.
+        // msg contains PIR and CDS states. PIR state tells if movement has
+        // been detected, CDS state tells if light is above or below the 
+        // desired threshhold.
         uint8_t action = msg[ACTN_INDEX];
+        uint8_t cdsState = msg[CDS_STATE_INDEX];
+
+        // turn on if PIR detects movement and either it's dark enough or the
+        // light is already on.
+        //if ( action == TURN_ON && ( state || cdsState == DARK ) ) {
         if ( action == TURN_ON ) {
             motionStart();
         } else {
             motionStop();
-            blinkyError();
         }
     } else {
         // nothing received. start timeout
-        //motionStop();
+        motionStop();
     }
 }
 
@@ -97,25 +101,19 @@ void checkTimeout() {
 
 void updateRelay() {
     digitalWrite( relayPin, state );
-    //digitalWrite( ledPin, state );
-    /*
     if ( timeoutPending ) {
-        digitalWrite( ledPin, ledSine() );
+        analogWrite( ledPin, ledSine() );
     } else {
         digitalWrite( ledPin, state );
     }
-    */
 }
 
 int ledSine() {
     double t = (millis() - time)/(duration/timeScale);
 
-    /*
     int val = (int)((sin(exp(t)) + 1) * 125);
     int s = max( val, 0 );
     return min( 255, s );
-    */
-    return sin(exp(t)) >= 0;
 }
 
 long timeLeft() {
